@@ -1,9 +1,4 @@
-"""
-main.py
-───────
-Servidor FastAPI que expone el agente LangChain al backend NestJS.
-Ejecutar con: uv run uvicorn main:app --reload --port 8000
-"""
+
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field

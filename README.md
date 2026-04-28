@@ -10,24 +10,49 @@ Proyecto full-stack con tres servicios independientes:
 
 ---
 
-## Requisitos previos
+## Primeros pasos (clonar y arrancar)
 
-- Node.js >= 18
-- Python >= 3.9
-- [uv](https://docs.astral.sh/uv/) (gestor de paquetes Python)
+Sigue estos pasos en orden la primera vez que descargues el proyecto.
 
-### Instalar uv (primera vez)
+### 1. Clonar el repositorio
+
+```bash
+git clone <url-del-repo>
+cd <nombre-carpeta>
+```
+
+### 2. Instalar Node.js >= 18 y Python >= 3.9
+
+Comprueba que los tienes instalados:
+
+```bash
+node -v   # debe mostrar v18 o superior
+python3 --version  # debe mostrar 3.9 o superior
+```
+
+### 3. Instalar uv (gestor de paquetes Python)
 
 ```bash
 curl -LsSf https://astral.sh/uv/install.sh | sh
 source $HOME/.local/bin/env   # o reinicia el terminal
 ```
 
----
+Verifica la instalación:
 
-## Variables de entorno
+```bash
+uv --version
+```
 
-Crea un archivo `.env` en la raíz del proyecto:
+### 4. Configurar variables de entorno
+
+Crea el archivo `.env` en la raíz del proyecto:
+
+```bash
+cp .env.example .env   # si existe plantilla
+# o créalo manualmente
+```
+
+Contenido del `.env`:
 
 ```env
 # Proveedor de IA: "google" u "openai"
@@ -45,16 +70,26 @@ AI_MODEL_OPENAI=gpt-4o-mini
 AI_TEMPERATURE=0.7
 ```
 
----
+### 5. Instalar dependencias de Node.js (frontend + backend)
 
-## Instalación de dependencias
+Desde la raíz del proyecto:
 
 ```bash
-# Instalar dependencias de frontend y backend
 npm install
+```
 
-# Instalar dependencias del agente
+### 6. Instalar dependencias de Python (agente IA)
+
+```bash
 cd agents && uv sync
+```
+
+`uv sync` lee el `pyproject.toml`, crea el entorno virtual automáticamente en `agents/.venv` e instala todas las dependencias. No necesitas crear el entorno manualmente.
+
+Vuelve a la raíz cuando termine:
+
+```bash
+cd ..
 ```
 
 ---
@@ -85,7 +120,7 @@ O directamente desde la carpeta `agents/`:
 
 ```bash
 cd agents
-uv run uvicorn main:app --reload --port 8000
+uv run fastapi dev main.py
 ```
 
 ---
