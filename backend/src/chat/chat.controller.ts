@@ -16,12 +16,12 @@ export class ChatController {
   }
 
   @Get('history/:sessionId')
-  getHistory(@Param('sessionId') sessionId: string) {
+  async getHistory(@Param('sessionId') sessionId: string) {
     return this.chatService.getHistory(sessionId);
   }
 
   @Delete('history/:sessionId')
-  clearHistory(@Param('sessionId') sessionId: string) {
-    this.chatService.clearHistory(sessionId);
+  async clearHistory(@Param('sessionId') sessionId: string) {
+    await this.chatService.clearHistory(sessionId);
   }
 }

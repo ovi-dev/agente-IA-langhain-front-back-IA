@@ -51,8 +51,13 @@ export function ChatMessageItem({ message }: ChatMessageProps) {
         >
           {message.content}
         </div>
-        <span className="text-[10px] text-slate-500 px-1 opacity-0 group-hover:opacity-100 transition-opacity">
-          {formatTime(message.timestamp)}
+        <span
+          suppressHydrationWarning
+          className="text-[10px] text-slate-500 px-1 opacity-0 group-hover:opacity-100 transition-opacity"
+        >
+          {message.timestamp.getTime() === 0
+            ? ""
+            : formatTime(message.timestamp)}
         </span>
       </div>
     </div>

@@ -17,16 +17,16 @@ import type { ChatMessage, SendMessagePayload } from "../types";
 const generateId = () =>
   `msg_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
 
+const WELCOME_MESSAGE: ChatMessage = {
+  id: "welcome-msg",
+  role: "assistant",
+  content:
+    "¡Hola! Soy tu asistente de TechStore. Puedo ayudarte con información sobre nuestros productos, precios, disponibilidad y mucho más. ¿En qué puedo ayudarte hoy? 😊",
+  timestamp: new Date(0),
+};
+
 export const useChat = (sessionId: string) => {
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      id: generateId(),
-      role: "assistant",
-      content:
-        "¡Hola! Soy tu asistente de TechStore. Puedo ayudarte con información sobre nuestros productos, precios, disponibilidad y mucho más. ¿En qué puedo ayudarte hoy? 😊",
-      timestamp: new Date(),
-    },
-  ]);
+  const [messages, setMessages] = useState<ChatMessage[]>([WELCOME_MESSAGE]);
 
   const [isTyping, setIsTyping] = useState(false);
   const abortRef = useRef<AbortController | null>(null);

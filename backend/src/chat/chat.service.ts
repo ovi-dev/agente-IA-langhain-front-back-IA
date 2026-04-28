@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 
 export interface ChatMessage {
@@ -10,30 +10,61 @@ export interface ChatMessage {
 
 @Injectable()
 export class ChatService {
-  private readonly history = new Map<string, ChatMessage[]>();
+  private readonly logger = new Logger(ChatService.name);
+  private readonly agentUrl =
+    process.env.AGENT_SERVICE_URL ?? 'http://localhost:8000';
 
   async processMessage(
     message: string,
     sessionId: string,
   ): Promise<ChatMessage> {
-    const response: ChatMessage = {
-      id: randomUUID(),
-      message: `Echo: ${message}`,
-      sessionId,
-      timestamp: new Date().toISOString(),
-    };
+    try {
+      const res = await fetch(`${this.agentUrl}/chat/message`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message, session_id: sessionId }),
+        signal: AbortSignal.timeout(30_000),
+      });
 
-    const existing = this.history.get(sessionId) ?? [];
-    this.history.set(sessionId, [...existing, response]);
+      if (!res.ok) {
+        throw new Error(`Agent responded with status ${res.status}`);
+      }
 
-    return response;
+      const data = (await res.json()) as ChatMessage;
+      return data;
+    } catch (err) {
+      this.logger.error('Error calling agent service', err);
+      // Fallback graceful si el servicio Python no está disponible
+      return {
+        id: randomUUID(),
+        message:
+          'El servicio de IA no está disponible en este momento. Asegúrate de que el agente Python esté corriendo.',
+        sessionId,
+        timestamp: new Date().toISOString(),
+      };
+    }
   }
 
-  getHistory(sessionId: string): ChatMessage[] {
-    return this.history.get(sessionId) ?? [];
+  async getHistory(sessionId: string): Promise<unknown[]> {
+    try {
+      const res = await fetch(`${this.agentUrl}/chat/history/${sessionId}`, {
+        signal: AbortSignal.timeout(5_000),
+      });
+      if (!res.ok) return [];
+      return res.json() as Promise<unknown[]>;
+    } catch {
+      return [];
+    }
   }
 
-  clearHistory(sessionId: string): void {
-    this.history.delete(sessionId);
+  async clearHistory(sessionId: string): Promise<void> {
+    try {
+      await fetch(`${this.agentUrl}/chat/history/${sessionId}`, {
+        method: 'DELETE',
+        signal: AbortSignal.timeout(5_000),
+      });
+    } catch (err) {
+      this.logger.warn('Could not clear history on agent service', err);
+    }
   }
 }
