@@ -12,22 +12,23 @@ import { useState, useCallback, useRef } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { sendMessage } from "../services/chatService";
 import type { ChatMessage, SendMessagePayload } from "../types";
+import { v4 as uuidv4 } from "uuid";
 
 /** Genera un ID único para cada mensaje */
-const generateId = () =>
-  `msg_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+const generateId = () => uuidv4();
 
 const WELCOME_MESSAGE: ChatMessage = {
   id: "welcome-msg",
   role: "assistant",
   content:
     "¡Hola! Soy tu asistente de TechStore. Puedo ayudarte con información sobre nuestros productos, precios, disponibilidad y mucho más. ¿En qué puedo ayudarte hoy? 😊",
-  timestamp: new Date(0),
+  // timestamp: new Date(0),
+  timestamp: Temporal.Now.instant()
+
 };
 
 export const useChat = (sessionId: string) => {
   const [messages, setMessages] = useState<ChatMessage[]>([WELCOME_MESSAGE]);
-
   const [isTyping, setIsTyping] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
 
@@ -46,7 +47,7 @@ export const useChat = (sessionId: string) => {
         id: response.id,
         role: "assistant",
         content: response.message,
-        timestamp: new Date(response.timestamp),
+        timestamp: Temporal.Instant.from(response.timestamp),
       };
       setMessages((prev) => [...prev, assistantMsg]);
     },
@@ -58,7 +59,7 @@ export const useChat = (sessionId: string) => {
         role: "assistant",
         content:
           "Lo siento, ha ocurrido un error al procesar tu mensaje. Por favor, inténtalo de nuevo.",
-        timestamp: new Date(),
+        timestamp: Temporal.Now.instant(),
       };
       setMessages((prev) => [...prev, errorMsg]);
     },
@@ -73,7 +74,7 @@ export const useChat = (sessionId: string) => {
         id: generateId(),
         role: "user",
         content: content.trim(),
-        timestamp: new Date(),
+        timestamp: Temporal.Now.instant(),
       };
 
       setMessages((prev) => [...prev, userMsg]);

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { v4 as uuidv4 } from "uuid";
 import { Sidebar } from "../components/layout/Sidebar";
 import { AppHeader } from "../components/layout/AppHeader";
 import { ChatContainer } from "../components/chat/ChatContainer";
@@ -13,7 +14,7 @@ function getSessionId(): string {
   const key = "techstore_session_id";
   let id = sessionStorage.getItem(key);
   if (!id) {
-    id = `sess_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+    id = uuidv4();
     sessionStorage.setItem(key, id);
   }
   return id;

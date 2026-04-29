@@ -6,7 +6,7 @@ export interface ChatMessage {
   id: string;
   role: MessageRole;
   content: string;
-  timestamp: Date;
+  timestamp: Temporal.Instant;
   isStreaming?: boolean;
 }
 

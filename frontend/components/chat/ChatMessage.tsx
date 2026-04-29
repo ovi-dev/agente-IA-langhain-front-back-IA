@@ -8,11 +8,10 @@ interface ChatMessageProps {
   message: ChatMessage;
 }
 
-function formatTime(date: Date): string {
-  return new Intl.DateTimeFormat("es-ES", {
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(date);
+function formatTime(instant: Temporal.Instant): string {
+  return instant
+    .toZonedDateTimeISO(Temporal.Now.timeZoneId())
+    .toLocaleString("es-ES", { hour: "2-digit", minute: "2-digit" });
 }
 
 export function ChatMessageItem({ message }: ChatMessageProps) {
@@ -53,11 +52,9 @@ export function ChatMessageItem({ message }: ChatMessageProps) {
         </div>
         <span
           suppressHydrationWarning
-          className="text-[10px] text-slate-500 px-1 opacity-0 group-hover:opacity-100 transition-opacity"
+          className="text-[10px] text-slate-500 px-1"
         >
-          {message.timestamp.getTime() === 0
-            ? ""
-            : formatTime(message.timestamp)}
+          {formatTime(message.timestamp)}
         </span>
       </div>
     </div>

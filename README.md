@@ -55,19 +55,20 @@ cp .env.example .env   # si existe plantilla
 Contenido del `.env`:
 
 ```env
-# Proveedor de IA: "google" u "openai"
-AI_PROVIDER=google
-
-# Google Gemini
+# ── AI Providers (pon las keys de los proveedores que vayas a usar) ───────────
 GOOGLE_API_KEY=tu_clave_aqui
-AI_MODEL_GOOGLE=gemini-2.5-flash
-
-# OpenAI (solo si AI_PROVIDER=openai)
 OPENAI_API_KEY=tu_clave_aqui
-AI_MODEL_OPENAI=gpt-4o-mini
 
-# Temperatura del modelo (0.0 - 1.0)
-AI_TEMPERATURE=0.7
+# ── Python Agent Service ──────────────────────────────────────────────────────
+AGENT_SERVICE_URL=http://localhost:8000
+
+# ── NestJS Backend ────────────────────────────────────────────────────────────
+PORT=3001
+CORS_ORIGIN=http://localhost:3000
+
+# ── Next.js Frontend ──────────────────────────────────────────────────────────
+NEXT_PUBLIC_API_URL=http://localhost:3001
+NEXT_PUBLIC_WS_URL=ws://localhost:3001
 ```
 
 ### 5. Instalar dependencias de Node.js (frontend + backend)
@@ -125,6 +126,88 @@ uv run fastapi dev main.py
 
 ---
 
+## Cambiar el modelo LLM
+
+El modelo activo se define en `agents/llm.py`. Para cambiarlo, comenta la línea
+`llm = ...` activa y descomenta la del proveedor que quieras. Solo puede haber
+una línea `llm = ...` sin comentar a la vez.
+
+Si el proveedor no está instalado, añade su paquete en `agents/pyproject.toml`
+y ejecuta `cd agents && uv sync`.
+
+### Proveedores disponibles en LangChain
+
+| Proveedor          | Paquete (`pyproject.toml`)      | Import                                                      | Variable en `.env`                                                   |
+| ------------------ | ------------------------------- | ----------------------------------------------------------- | -------------------------------------------------------------------- |
+| Google Gemini      | `langchain-google-genai`        | `from langchain_google_genai import ChatGoogleGenerativeAI` | `GOOGLE_API_KEY`                                                     |
+| OpenAI             | `langchain-openai`              | `from langchain_openai import ChatOpenAI`                   | `OPENAI_API_KEY`                                                     |
+| Anthropic (Claude) | `langchain-anthropic`           | `from langchain_anthropic import ChatAnthropic`             | `ANTHROPIC_API_KEY`                                                  |
+| Groq               | `langchain-groq`                | `from langchain_groq import ChatGroq`                       | `GROQ_API_KEY`                                                       |
+| Ollama (local)     | `langchain-ollama`              | `from langchain_ollama import ChatOllama`                   | —                                                                    |
+| Cohere             | `langchain-cohere`              | `from langchain_cohere import ChatCohere`                   | `COHERE_API_KEY`                                                     |
+| Mistral            | `langchain-mistralai`           | `from langchain_mistralai import ChatMistralAI`             | `MISTRAL_API_KEY`                                                    |
+| AWS Bedrock        | `langchain-aws`                 | `from langchain_aws import ChatBedrock`                     | `AWS_ACCESS_KEY_ID` + `AWS_SECRET_ACCESS_KEY` + `AWS_DEFAULT_REGION` |
+| Azure OpenAI       | `langchain-openai`              | `from langchain_openai import AzureChatOpenAI`              | `AZURE_OPENAI_API_KEY` + `AZURE_OPENAI_ENDPOINT`                     |
+| HuggingFace        | `langchain-huggingface`         | `from langchain_huggingface import ChatHuggingFace`         | `HUGGINGFACEHUB_API_TOKEN`                                           |
+| Nvidia             | `langchain-nvidia-ai-endpoints` | `from langchain_nvidia_ai_endpoints import ChatNVIDIA`      | `NVIDIA_API_KEY`                                                     |
+| Together AI        | `langchain-together`            | `from langchain_together import ChatTogether`               | `TOGETHER_API_KEY`                                                   |
+| Fireworks          | `langchain-fireworks`           | `from langchain_fireworks import ChatFireworks`             | `FIREWORKS_API_KEY`                                                  |
+
+Referencia completa: [python.langchain.com/docs/integrations/chat](https://python.langchain.com/docs/integrations/chat/)
+
+---
+
+## Dependencias por servicio
+
+### Agente IA (`agents/pyproject.toml`)
+
+| Paquete                  | Versión | Para qué sirve                                        |
+| ------------------------ | ------- | ----------------------------------------------------- |
+| `fastapi[standard]`      | 0.115.6 | Servidor HTTP + CLI de desarrollo                     |
+| `python-dotenv`          | 1.0.1   | Leer el archivo `.env`                                |
+| `langchain`              | 0.3.14  | Framework principal de LangChain                      |
+| `langchain-core`         | 0.3.29  | Tipos base (prompts, mensajes, runnables)             |
+| `langchain-openai`       | 0.2.14  | Integración con OpenAI                                |
+| `langchain-google-genai` | 2.0.8   | Integración con Google Gemini                         |
+| `pydantic`               | 2.10.4  | Validación de datos en los endpoints                  |
+| `httpx`                  | 0.28.1  | Cliente HTTP async (usado internamente por LangChain) |
+
+Instalar: `cd agents && uv sync`
+
+---
+
+### Backend NestJS (`backend/package.json`)
+
+| Paquete                    | Para qué sirve                               |
+| -------------------------- | -------------------------------------------- |
+| `@nestjs/common`           | Decoradores, módulos, controladores          |
+| `@nestjs/core`             | Núcleo del framework NestJS                  |
+| `@nestjs/platform-express` | Adaptador HTTP con Express                   |
+| `@nestjs/websockets`       | Soporte WebSocket en NestJS                  |
+| `@nestjs/platform-ws`      | Adaptador WebSocket nativo                   |
+| `rxjs`                     | Programación reactiva (requerido por NestJS) |
+| `reflect-metadata`         | Polyfill para decoradores TypeScript         |
+| `ws`                       | Librería WebSocket de bajo nivel             |
+
+Instalar: `npm install` (desde la raíz)
+
+---
+
+### Frontend Next.js (`frontend/package.json`)
+
+| Paquete                 | Para qué sirve                                       |
+| ----------------------- | ---------------------------------------------------- |
+| `next`                  | Framework React con SSR/SSG                          |
+| `react` / `react-dom`   | UI library                                           |
+| `@tanstack/react-query` | Gestión de estado del servidor y caché de peticiones |
+| `axios`                 | Cliente HTTP para llamadas a la API                  |
+| `lucide-react`          | Iconos SVG como componentes React                    |
+| `tailwindcss`           | CSS utility-first                                    |
+
+Instalar: `npm install` (desde la raíz)
+
+---
+
 ## Estructura del proyecto
 
 ```
@@ -137,4 +220,8 @@ uv run fastapi dev main.py
 │   └── .env         # cargado automáticamente por agent.py
 ├── .env             # variables de entorno compartidas
 └── package.json     # scripts raíz con npm workspaces
+```
+
+```
+npm install uuid --workspace=frontend && npm install --save-dev @types/uuid --workspace=frontend
 ```
