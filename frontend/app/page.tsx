@@ -27,7 +27,7 @@ export default function Home() {
   const sessionId = useMemo(() => getSessionId(), []);
 
   // WebSocket conectado en background — listo para streaming cuando el backend lo soporte
-  const { isConnected } = useWebSocket(sessionId);
+  const { estaConectado } = useWebSocket(sessionId);
 
   return (
     <div className="flex h-full bg-slate-950 overflow-hidden">
@@ -44,7 +44,7 @@ export default function Home() {
         <AppHeader activeView={activeView} />
 
         <main className="flex-1 overflow-hidden p-4 lg:p-6">
-          <ChatContainer sessionId={sessionId} isWsConnected={isConnected} />
+          <ChatContainer sessionId={sessionId} isWsConnected={estaConectado} />
         </main>
       </div>
     </div>

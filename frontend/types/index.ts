@@ -24,27 +24,46 @@ export interface ChatResponse {
 
 // ─── WebSocket ───────────────────────────────────────────────────────────────
 
-export type WsEventType =
-  | "message"
-  | "typing"
-  | "stop_typing"
-  | "connected"
-  | "disconnected"
-  | "error"
-  | "stream_chunk"
-  | "stream_end";
+/**
+ * Todos los tipos de eventos que puede enviar o recibir el WebSocket del chat.
+ * Si en otro proyecto necesitas eventos distintos, cambia solo este tipo.
+ */
+export type TipoEventoWs =
+  | "mensaje" // el servidor envía la respuesta final del agente
+  | "escribiendo" // el servidor avisa que está procesando (typing indicator)
+  | "parar_escribir" // el servidor avisa que terminó de procesar
+  | "conectado" // confirmación de conexión establecida
+  | "desconectado" // se perdió la conexión
+  | "error" // ocurrió un error en el servidor
+  | "fragmento" // chunk de streaming (respuesta parcial letra a letra)
+  | "fin_stream"; // señal de que el streaming terminó
 
-export interface WsMessage {
-  event: WsEventType;
-  data: unknown;
-  sessionId?: string;
-  timestamp?: string;
+/**
+ * Estructura del mensaje que viaja por el WebSocket (tanto enviado como recibido).
+ * Todos los mensajes siguen este mismo formato JSON.
+ */
+export interface MensajeWs {
+  /** Tipo de evento — define cómo interpretar `datos` */
+  evento: TipoEventoWs;
+  /** Contenido del mensaje, varía según el tipo de evento */
+  datos: unknown;
+  /** ID de sesión del usuario (opcional, para el backend) */
+  idSesion?: string;
+  /** Fecha y hora del mensaje en formato ISO 8601 */
+  fechaHora?: string;
 }
 
-export interface WsStreamChunk {
-  chunk: string;
-  messageId: string;
-  done: boolean;
+/**
+ * Estructura de un fragmento de streaming.
+ * El agente envía la respuesta trozo a trozo con este formato.
+ */
+export interface FragmentoStream {
+  /** Texto parcial del fragmento */
+  fragmento: string;
+  /** ID del mensaje al que pertenece este fragmento */
+  idMensaje: string;
+  /** true cuando es el último fragmento y el stream terminó */
+  terminado: boolean;
 }
 
 // ─── Estado UI ───────────────────────────────────────────────────────────────

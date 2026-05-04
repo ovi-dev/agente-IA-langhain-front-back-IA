@@ -7,51 +7,51 @@
  *  - Expone el estado de conexión y streaming
  *
  * Uso:
- *   const { isConnected, streamingText, sendWsMessage } = useWebSocket(sessionId);
+ *   const { estaConectado, textoStreaming, enviarMensajeWs } = useWebSocket(idSesion);
  */
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { wsService } from "../services/wsService";
-import type { WsStreamChunk } from "../services/wsService";
+import { servicioWs } from "../services/wsService";
+import type { FragmentoStream } from "../services/wsService";
 
-export const useWebSocket = (sessionId: string) => {
-  const [isConnected, setIsConnected] = useState(false);
-  const [streamingText, setStreamingText] = useState("");
-  const [isStreaming, setIsStreaming] = useState(false);
+export const useWebSocket = (idSesion: string) => {
+  const [estaConectado, setEstaConectado] = useState(false);
+  const [textoStreaming, setTextoStreaming] = useState("");
+  const [enStreaming, setEnStreaming] = useState(false);
 
   useEffect(() => {
     // 1️⃣ Abrir conexión al montar
-    wsService.connect(sessionId);
+    servicioWs.conectar(idSesion);
 
     // 2️⃣ Escuchar eventos
-    wsService.on("connected", () => setIsConnected(true));
-    wsService.on("disconnected", () => setIsConnected(false));
+    servicioWs.escuchar("conectado", () => setEstaConectado(true));
+    servicioWs.escuchar("desconectado", () => setEstaConectado(false));
 
-    // 3️⃣ Manejar streaming de respuesta IA chunk a chunk
-    wsService.on("stream_chunk", (data) => {
-      const chunk = data as WsStreamChunk;
-      setIsStreaming(true);
-      setStreamingText((prev) => prev + chunk.chunk);
+    // 3️⃣ Manejar streaming de respuesta IA fragmento a fragmento
+    servicioWs.escuchar("fragmento", (datos) => {
+      const frag = datos as FragmentoStream;
+      setEnStreaming(true);
+      setTextoStreaming((prev) => prev + frag.fragmento);
 
-      if (chunk.done) {
-        setIsStreaming(false);
-        setStreamingText(""); // Resetea para el próximo mensaje
+      if (frag.terminado) {
+        setEnStreaming(false);
+        setTextoStreaming(""); // Resetea para el próximo mensaje
       }
     });
 
     // 4️⃣ Cleanup: cerrar al desmontar el componente
     return () => {
-      wsService.off("connected");
-      wsService.off("disconnected");
-      wsService.off("stream_chunk");
-      wsService.disconnect();
+      servicioWs.dejarEscuchar("conectado");
+      servicioWs.dejarEscuchar("desconectado");
+      servicioWs.dejarEscuchar("fragmento");
+      servicioWs.desconectar();
     };
-  }, [sessionId]);
+  }, [idSesion]);
 
-  const sendWsMessage = useCallback((message: string) => {
-    wsService.sendMessage(message);
+  const enviarMensajeWs = useCallback((mensaje: string) => {
+    servicioWs.enviarMensaje(mensaje);
   }, []);
 
-  return { isConnected, streamingText, isStreaming, sendWsMessage };
+  return { estaConectado, textoStreaming, enStreaming, enviarMensajeWs };
 };
